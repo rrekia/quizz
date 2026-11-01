@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الفرض الإلكتروني</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#e8b923;--gold2:#a67c00;--blue1:#1a2fa8;--blue2:#050a3a;--ok:#2ecc71}
+body{min-height:100vh;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#fff;
+ background:radial-gradient(ellipse at 50% 0%,#2a3fd0 0%,#0a1470 40%,#02041a 100%) fixed;
+ display:flex;justify-content:center;padding:18px 12px}
+.wrap{width:100%;max-width:880px}
+h1{text-align:center;font-size:1.6rem;color:var(--gold);text-shadow:0 2px 10px #000a;margin:6px 0 16px}
+.card{background:linear-gradient(180deg,#0e1a7acc,#060c40cc);border:2px solid var(--gold);
+ border-radius:22px;padding:22px;box-shadow:0 0 28px #e8b92333}
+.hide{display:none!important}
+label{display:block;margin:14px 0 6px;color:#ffe9a0}
+input{width:100%;padding:13px 16px;font-size:1.1rem;border-radius:30px;border:2px solid var(--gold);
+ background:#050a3a;color:#fff;font-family:inherit;outline:none}
+input:focus{box-shadow:0 0 0 3px #e8b92355}
+.btn{display:inline-block;padding:13px 30px;font-size:1.1rem;border-radius:30px;border:2px solid var(--gold);
+ background:linear-gradient(180deg,#2438c9,#0a1470);color:#fff;cursor:pointer;font-family:inherit}
+.btn:hover:not(:disabled){background:linear-gradient(180deg,#e8b923,#a67c00);color:#000}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.main{background:linear-gradient(180deg,#e8b923,#a67c00);color:#000;font-weight:bold}
+.center{text-align:center}
+.err{color:#ff8a8a;margin-top:12px;min-height:1.2em}
+.note{margin-top:16px;padding:10px 14px;border:1px dashed #e8b92388;border-radius:14px;color:#ffe9a0;font-size:.95rem;line-height:1.8}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:#ffe9a0;font-size:1rem;gap:8px}
+#timer{direction:ltr;font-variant-numeric:tabular-nums}
+.qbox{border:2px solid var(--gold);border-radius:40px;padding:20px 26px;text-align:center;font-size:1.35rem;
+ line-height:1.8;background:linear-gradient(180deg,#1a2fa8,#050a3a);margin-bottom:18px;min-height:90px;
+ display:flex;align-items:center;justify-content:center}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.opt{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:40px;border:2px solid var(--gold);
+ background:linear-gradient(180deg,#1a2fa8,#050a3a);color:#fff;font-size:1.1rem;cursor:pointer;font-family:inherit;text-align:center;line-height:1.6}
+.opt .l{color:var(--gold);font-weight:bold;font-size:1.2rem}
+.opt .t{flex:1;unicode-bidi:plaintext;text-align:center}
+.opt:hover{background:linear-gradient(180deg,#3350f0,#0a1470)}
+.opt.sel{background:linear-gradient(180deg,#f5c93b,#b8860b);color:#000;border-color:#fff}
+.opt.sel .l{color:#000}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-bottom:16px}
+.ladder{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.ladder button{padding:9px 0;border-radius:10px;border:1.5px solid #5d6ad8;background:#0a1470;color:#cfd4ff;
+ font-size:.95rem;cursor:pointer;font-family:inherit}
+.ladder button.ans{background:#2a3fd0;border-color:var(--gold);color:#fff}
+.ladder button.cur{background:var(--gold);color:#000;border-color:#fff;font-weight:bold}
+.legend{margin-top:8px;font-size:.85rem;color:#aab2ff;text-align:center}
+.res{border:2px solid var(--gold);border-radius:20px;padding:18px;margin:6px 0 4px;background:#050a3a99}
+.res .row{display:flex;justify-content:space-between;gap:12px;padding:8px 4px;border-bottom:1px solid #ffffff22;font-size:1.15rem}
+.res .row:last-of-type{border-bottom:none}
+.res .k{color:#ffe9a0}
+.res .v{font-weight:bold;unicode-bidi:plaintext}
+.score{font-size:4.2rem;color:var(--gold);font-weight:bold;direction:ltr;text-shadow:0 0 20px #e8b92388;line-height:1.2;margin-top:8px}
+.msg{font-size:1.3rem;margin:6px 0 10px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{padding:9px 8px;text-align:center;border-bottom:1px solid #ffffff22}
+th{color:var(--gold);font-size:.95rem}
+tr.me{background:#e8b92333;font-weight:bold}
+td.nm{text-align:right}
+h2{color:var(--gold);margin:22px 0 4px;text-align:center;font-size:1.25rem}
+@media(max-width:620px){
+ .opts{grid-template-columns:1fr}
+ .ladder{grid-template-columns:repeat(5,1fr)}
+ .qbox{font-size:1.15rem;padding:16px}
+ .btn{padding:12px 18px}
+ .bar{font-size:.9rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <h1 id="title">الفرض الإلكتروني</h1>
+
+ <!-- شاشة البداية -->
+ <div class="card" id="s-start">
+  <label for="f-name">الاسم واللقب</label>
+  <input id="f-name" maxlength="40" autocomplete="off">
+  <label for="f-group">القسم (مثال: 1 ج م ع ت 3)</label>
+  <input id="f-group" maxlength="30" autocomplete="off">
+  <label for="f-classGroup">الفوج</label>
+  <input id="f-classGroup" maxlength="20" autocomplete="off" placeholder="مثال: الفوج 1">
+  <div class="err" id="start-err"></div>
+  <div class="center" style="margin-top:14px"><button class="btn main" id="btn-start">ابدأ الفرض</button></div>
+  <div class="note">
+   20 سؤالًا عشوائيًا من بنك الأسئلة — كل سؤال بنقطة واحدة — يمكنك الرجوع وتغيير إجابتك قبل الإرسال.<br>
+   <b>تنبيه:</b> لا يمكن إعادة الفرض بعد الإرسال، ولا يُسمح بمحاولة ثانية لنفس التلميذ.
+  </div>
+ </div>
+
+ <!-- شاشة الأسئلة -->
+ <div class="card hide" id="s-quiz">
+  <div class="bar">
+   <span id="who"></span>
+   <span id="qnum"></span>
+   <span id="timer">00:00</span>
+  </div>
+  <div class="qbox"><span id="qtext" dir="auto"></span></div>
+  <div id="qimage-wrap" class="center hide" style="margin:0 auto 18px"><img id="qimage" alt="صورة مكوّن حاسوبي" style="max-width:100%;width:360px;max-height:250px;object-fit:contain;border:2px solid var(--gold);border-radius:18px;background:#071044;padding:8px"></div>
+  <div class="opts" id="opts"></div>
+  <div class="nav">
+   <button class="btn" id="btn-prev">→ السابق</button>
+   <button class="btn main" id="btn-next">التالي ←</button>
+  </div>
+  <div class="ladder" id="ladder"></div>
+  <div class="legend">الأرقام: <b style="color:#ffd04d">الأصفر</b> = السؤال الحالي — <b>الأزرق الفاتح</b> = تمت الإجابة. اضغط على أي رقم للانتقال إليه.</div>
+ </div>
+
+ <!-- شاشة النتيجة -->
+ <div class="card hide center" id="s-result">
+  <div>تم إرسال فرضك ✔</div>
+  <div class="res">
+   <div class="row"><span class="k">الاسم واللقب</span><span class="v" id="r-name"></span></div>
+   <div class="row"><span class="k">القسم</span><span class="v" id="r-group"></span></div>
+   <div class="row"><span class="k">الفوج</span><span class="v" id="r-classGroup"></span></div>
+   <div class="row"><span class="k">الإجابات الصحيحة</span><span class="v" id="r-correct"></span></div>
+   <div class="row"><span class="k">الإجابات الخاطئة أو المتروكة</span><span class="v" id="r-wrong"></span></div>
+   <div class="row"><span class="k">العلامة المتحصل عليها</span><span class="v" id="r-mark"></span></div>
+  </div>
+  <div class="score" id="r-score"></div>
+  <div class="msg" id="r-msg"></div>
+  <div class="legend" id="r-rank"></div>
+  <div class="note">لا يمكنك إعادة الفرض. إن كان هناك خطأ، تواصل مع الأستاذة.</div>
+  <h2>🏆 لوحة الترتيب</h2>
+  <table>
+   <thead><tr><th>#</th><th>الاسم</th><th>القسم</th><th>الفوج</th><th>النقطة</th><th>المدة</th></tr></thead>
+   <tbody id="board"></tbody>
+  </table>
+ </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const LET = ['أ','ب','ج','د'];
+let Q = [], A = [], cur = 0, start = 0, me = {name:'', group:'', classGroup:''}, myId = null, tick = null, boardTimer = null, sending = false;
+
+/* ---------- تخزين محلي (اختياري) ---------- */
+function store(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function fetchStore(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function clearStore(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function save(){ store('qz', {me, Q, A, cur, start}); }
+
+/* معرّف الجهاز: يمنع إعادة الفرض من نفس الجهاز/المتصفح */
+function deviceId(){
+  let d = fetchStore('qzdev');
+  if(typeof d !== 'string' || d.length < 16){
+    const a = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    d = Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
+    store('qzdev', d);
+  }
+  return d;
+}
+const DEV = (function(){ try{ return deviceId(); }catch(e){ return Math.random().toString(16).slice(2).padEnd(32,'0'); } })();
+
+function show(id){ for(const s of ['s-start','s-quiz','s-result']) $('#'+s).classList.toggle('hide', s!==id); }
+function fmt(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function markText(score, total){ return score + ' / ' + total; }
+
+function shuffle(items){
+  const a = items.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+async function init(){
+  try{
+    const d = await (await fetch('/api/quiz')).json();
+    Q = shuffle(d.questions).slice(0, 20).map(q => ({...q, options: shuffle(q.options)})); $('#title').textContent = d.title; document.title = d.title;
+  }catch(e){
+    $('#start-err').textContent = 'تعذر الاتصال بالخادم. تحقق من الاتصال ثم أعد تحميل الصفحة.'; return;
+  }
+  /* هل أنجز هذا الجهاز الفرض من قبل؟ اعرض نتيجته مباشرة. */
+  try{
+    const m = await (await fetch('/api/mine?device='+encodeURIComponent(DEV))).json();
+    if(m && m.row){ clearStore('qz'); myId = m.row.id; showResult(m.row); return; }
+  }catch(e){}
+  const st = fetchStore('qz');
+  if(st && st.Q && st.Q.length === 20 && st.A && st.A.length === 20){
+    Q = st.Q; me = st.me; A = st.A; cur = st.cur||0; start = st.start;
+    beginQuiz();
+  }
+}
+
+$('#btn-start').onclick = async () => {
+  const name = $('#f-name').value.trim().replace(/\s+/g,' ');
+  const group = $('#f-group').value.trim().replace(/\s+/g,' ');
+  const classGroup = $('#f-classGroup').value.trim().replace(/\s+/g,' ');
+  const err = $('#start-err'); err.textContent = '';
+  if(!name){ err.textContent = 'اكتب اسمك ولقبك من فضلك.'; return; }
+  if(!group){ err.textContent = 'اكتب قسمك من فضلك.'; return; }
+  if(!classGroup){ err.textContent = 'اكتب فوجك من فضلك.'; return; }
+  try{
+    const r = await fetch('/api/check?name='+encodeURIComponent(name)+'&group='+encodeURIComponent(group)+'&classGroup='+encodeURIComponent(classGroup)+'&device='+encodeURIComponent(DEV));
+    const d = await r.json();
+    if(d.exists){
+      err.textContent = d.reason === 'device'
+        ? 'تم إنجاز الفرض من هذا الجهاز من قبل. لا يمكن إعادة المحاولة.'
+        : 'هذا التلميذ أنجز الفرض من قبل في هذا القسم. لا يمكن إعادة المحاولة.';
+      return;
+    }
+  }catch(e){ err.textContent = 'تعذر الاتصال بالخادم.'; return; }
+  me = {name, group, classGroup}; A = Q.map(()=>-1); cur = 0; start = Date.now();
+  save(); beginQuiz();
+};
+
+function beginQuiz(){
+  $('#who').textContent = me.name;
+  show('s-quiz'); render();
+  clearInterval(tick);
+  $('#timer').textContent = fmt(Math.floor((Date.now()-start)/1000));
+  tick = setInterval(()=>{ $('#timer').textContent = fmt(Math.floor((Date.now()-start)/1000)); }, 1000);
+}
+
+function render(){
+  const q = Q[cur];
+  $('#qnum').textContent = 'السؤال ' + (cur+1) + ' من ' + Q.length;
+  $('#qtext').textContent = q.q;
+  const iw = $('#qimage-wrap');
+  if(q.image){ $('#qimage').src = q.image; iw.classList.remove('hide'); } else { $('#qimage').removeAttribute('src'); iw.classList.add('hide'); }
+  const box = $('#opts'); box.innerHTML = '';
+  q.options.forEach((t,i)=>{
+    const b = document.createElement('button');
+    b.className = 'opt' + (A[cur]===i ? ' sel' : '');
+    const l = document.createElement('span'); l.className='l'; l.textContent = LET[i]+' :';
+    const s = document.createElement('span'); s.className='t'; s.setAttribute('dir','auto'); s.textContent = t;
+    b.append(l, s);
+    b.onclick = () => { A[cur] = (A[cur]===i ? -1 : i); save(); render(); };
+    box.appendChild(b);
+  });
+  const lad = $('#ladder'); lad.innerHTML = '';
+  Q.forEach((_,i)=>{
+    const b = document.createElement('button');
+    b.textContent = i+1;
+    b.className = i===cur ? 'cur' : (A[i]>=0 ? 'ans' : '');
+    b.onclick = () => { cur = i; save(); render(); };
+    lad.appendChild(b);
+  });
+  $('#btn-prev').disabled = cur===0;
+  $('#btn-next').textContent = cur===Q.length-1 ? 'إنهاء وإرسال ✔' : 'التالي ←';
+}
+
+$('#btn-prev').onclick = () => { if(cur>0){ cur--; save(); render(); } };
+$('#btn-next').onclick = () => {
+  if(cur < Q.length-1){ cur++; save(); render(); }
+  else finish();
+};
+
+async function finish(){
+  if(sending) return;
+  const empty = A.filter(a=>a<0).length;
+  let m = empty ? ('لديك ' + empty + ' سؤال بدون إجابة.\n') : '';
+  m += 'هل تريد إرسال الفرض الآن؟ لن تتمكن من التعديل ولا من إعادة الفرض بعد الإرسال.';
+  if(!confirm(m)) return;
+  sending = true; const btn = $('#btn-next'); btn.disabled = true;
+  try{
+    const r = await fetch('/api/submit', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name:me.name, group:me.group, classGroup:me.classGroup, device:DEV,
+        responses:Q.map((q,i)=>({id:q.id, answer:A[i]>=0 ? q.options[A[i]] : null})),
+        seconds:Math.floor((Date.now()-start)/1000)})});
+    const d = await r.json();
+    if(!r.ok){
+      alert(d.error || 'حدث خطأ');
+      sending = false; btn.disabled = false;
+      if(r.status === 409){ clearInterval(tick); clearStore('qz'); show('s-start'); $('#start-err').textContent = d.error; }
+      return;
+    }
+    clearInterval(tick); clearStore('qz');
+    myId = d.id;
+    showResult({id:d.id, name:me.name, group:me.group, classGroup:me.classGroup, score:d.score, total:d.total});
+  }catch(e){
+    alert('تعذر الإرسال. تحقق من الاتصال بالشبكة ثم أعد المحاولة (إجاباتك محفوظة).');
+    sending = false; btn.disabled = false;
+  }
+}
+
+function showResult(row){
+  show('s-result');
+  $('#r-name').textContent = row.name;
+  $('#r-group').textContent = row.group;
+  $('#r-classGroup').textContent = row.classGroup || (me && me.classGroup) || '—';
+  const mk = markText(row.score, row.total);
+  $('#r-mark').textContent = mk + ' نقطة';
+  $('#r-score').textContent = mk + ' نقطة';
+  $('#r-correct').textContent = row.score;
+  $('#r-wrong').textContent = row.total - row.score;
+  const p = row.score/row.total;
+  $('#r-msg').textContent = p>=0.8 ? '🌟 ممتاز! أحسنت!' : p>=0.5 ? '👍 جيد، واصل الاجتهاد' : '📚 راجع الدروس وحاول التحسّن';
+  loadBoard(); clearInterval(boardTimer); boardTimer = setInterval(loadBoard, 8000);
+}
+
+async function loadBoard(){
+  try{
+    const rows = await (await fetch('/api/board')).json();
+    const tb = $('#board'); tb.innerHTML = '';
+    rows.forEach((r,i)=>{
+      const tr = document.createElement('tr'); if(r.id===myId) tr.className='me';
+      const cells = [i+1, r.name, r.group, r.classGroup || '—', markText(r.score, r.total), fmt(r.seconds)];
+      cells.forEach((c,j)=>{ const td=document.createElement('td'); if(j===1) td.className='nm'; td.textContent=c; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+    const idx = rows.findIndex(r=>r.id===myId);
+    $('#r-rank').textContent = idx>=0 ? ('ترتيبك الحالي: ' + (idx+1) + ' من ' + rows.length) : '';
+  }catch(e){}
+}
+
+init();
+</script>
+</body>
+</html>

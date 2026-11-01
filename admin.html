@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة الترتيب</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:#fff;padding:20px 14px;
+ background:radial-gradient(ellipse at 50% 0%,#2a3fd0 0%,#0a1470 40%,#02041a 100%) fixed}
+.wrap{max-width:980px;margin:0 auto}
+h1{text-align:center;color:#e8b923;font-size:1.9rem;margin-bottom:14px}
+.stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.stat{border:2px solid #e8b923;border-radius:16px;padding:10px 22px;text-align:center;background:#0a1470aa}
+.stat b{display:block;font-size:1.6rem;color:#ffd04d}
+.card{border:2px solid #e8b923;border-radius:20px;padding:16px;background:#060c40cc}
+table{width:100%;border-collapse:collapse}
+th,td{padding:11px 8px;text-align:center;border-bottom:1px solid #ffffff22;font-size:1.1rem}
+th{color:#e8b923}
+td.nm{text-align:right}
+tr:nth-child(1) td:first-child{color:#ffd700;font-weight:bold}
+.tools{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.btn{padding:10px 22px;border-radius:30px;border:2px solid #e8b923;background:#0a1470;color:#fff;cursor:pointer;font-family:inherit;font-size:1rem}
+.btn:hover{background:#e8b923;color:#000}
+.btn.red{border-color:#ff6b6b}.btn.red:hover{background:#ff6b6b}
+.x{background:none;border:none;color:#ff8a8a;cursor:pointer;font-size:1.1rem}
+.sub{text-align:center;color:#aab2ff;margin-bottom:12px;font-size:.95rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <h1>🏆 لوحة الترتيب</h1>
+ <div class="sub">تتحدث تلقائيًا كل 3 ثوانٍ</div>
+ <div class="stats">
+  <div class="stat"><b id="st-n">0</b>عدد التلاميذ</div>
+  <div class="stat"><b id="st-avg">–</b>المعدل</div>
+  <div class="stat"><b id="st-max">–</b>أعلى نقطة</div>
+ </div>
+ <div class="card">
+  <table>
+   <thead><tr><th>الترتيب</th><th>الاسم</th><th>القسم</th><th>الفوج</th><th>النقطة</th><th>المدة</th><th class="adm"></th></tr></thead>
+   <tbody id="rows"></tbody>
+  </table>
+ </div>
+ <div class="tools">
+  <button class="btn" id="b-csv">⬇ تصدير Excel (CSV)</button>
+  <button class="btn red" id="b-reset">🗑 مسح كل النتائج</button>
+ </div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+let pw = null;
+function fmt(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function askPw(){ if(pw===null){ pw = prompt('كلمة سر الأستاذة:') || null; } return pw; }
+
+async function load(){
+  try{
+    const rows = await (await fetch('/api/board')).json();
+    const tb = $('#rows'); tb.innerHTML = '';
+    rows.forEach((r,i)=>{
+      const tr = document.createElement('tr');
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1);
+      [medal, r.name, r.group, r.classGroup || '—', r.score+'/'+r.total, fmt(r.seconds)].forEach((c,j)=>{
+        const td = document.createElement('td'); if(j===1) td.className='nm'; td.textContent = c; tr.appendChild(td);
+      });
+      const td = document.createElement('td');
+      const x = document.createElement('button'); x.className='x'; x.title='حذف'; x.textContent='✖';
+      x.onclick = () => del(r);
+      td.appendChild(x); tr.appendChild(td);
+      tb.appendChild(tr);
+    });
+    $('#st-n').textContent = rows.length;
+    if(rows.length){
+      const sum = rows.reduce((a,r)=>a+r.score,0);
+      $('#st-avg').textContent = (sum/rows.length).toFixed(1);
+      $('#st-max').textContent = rows[0].score + '/' + rows[0].total;
+    } else { $('#st-avg').textContent='–'; $('#st-max').textContent='–'; }
+  }catch(e){}
+}
+
+async function post(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const d = await r.json();
+  if(!r.ok){ if(r.status===403) pw=null; alert(d.error || 'خطأ'); return false; }
+  return true;
+}
+async function del(r){
+  if(!askPw()) return;
+  if(!confirm('حذف نتيجة: ' + r.name + ' ؟ (يمكنه إعادة الفرض بعدها)')) return;
+  if(await post('/api/admin/delete', {password:pw, id:r.id})) load();
+}
+$('#b-reset').onclick = async () => {
+  if(!askPw()) return;
+  if(!confirm('سيتم مسح كل النتائج نهائيًا. متأكدة؟')) return;
+  if(await post('/api/admin/reset', {password:pw})) load();
+};
+$('#b-csv').onclick = () => { if(!askPw()) return; location.href = '/export.csv?pw=' + encodeURIComponent(pw); };
+
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>
